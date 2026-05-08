@@ -485,29 +485,24 @@ function hideError() { document.getElementById('errorBox').classList.remove('act
 
 function extractJSON(text) {
   try {
-    if (!text) throw new Error("Empty response");
-
-    // remove markdown fences
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-
-    // try direct parse first
-    try {
-      return JSON.parse(text);
-    } catch (_) {}
-
-    // safer extraction: match balanced JSON block
+    // 1. Remove Markdown code fences if they exist
+    const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    // 2. Try to parse the cleaned text
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // 3. Fallback: Try to find anything between the first { and the last }
     const match = text.match(/\{[\s\S]*\}/);
-
-    if (!match) {
-      console.error("RAW OUTPUT:", text);
-      throw new Error("No JSON object found in response");
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch (innerError) {
+        console.error("Partial JSON found but still unparseable:", match[0]);
+      }
     }
-
-    return JSON.parse(match[0]);
-
-  } catch (err) {
-    console.error("FAILED RAW GEMINI OUTPUT:", text);
-    throw new Error("Failed to parse Gemini JSON");
+    throw new Error("Gemini returned invalid data format. Please try again.");
+  }
+}
   }
 }
 async function generate() {
@@ -590,7 +585,7 @@ Rules:
   try {
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
@@ -613,7 +608,7 @@ Rules:
           }
         ],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 0.1,
           maxOutputTokens: 1800,
           responseMimeType: "application/json"
         }
