@@ -483,30 +483,30 @@ function showError(msg) {
 }
 function hideError() { document.getElementById('errorBox').classList.remove('active'); }
 
- function extractJSON(text) {
+function extractJSON(text) {
   try {
+    if (!text) throw new Error("Empty response");
+
     // remove markdown fences
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
     // try direct parse first
     try {
       return JSON.parse(text);
-    } catch {}
+    } catch (_) {}
 
-    // extract first valid JSON block
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
+    // safer extraction: match balanced JSON block
+    const match = text.match(/\{[\s\S]*\}/);
 
-    if (start === -1 || end === -1) {
-      throw new Error("No JSON found in response");
+    if (!match) {
+      console.error("RAW OUTPUT:", text);
+      throw new Error("No JSON object found in response");
     }
 
-    const candidate = text.slice(start, end + 1);
-
-    return JSON.parse(candidate);
+    return JSON.parse(match[0]);
 
   } catch (err) {
-    console.error("RAW GEMINI OUTPUT:", text);
+    console.error("FAILED RAW GEMINI OUTPUT:", text);
     throw new Error("Failed to parse Gemini JSON");
   }
 }
