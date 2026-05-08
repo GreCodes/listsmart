@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListSmart — AI Listings for Etsy & eBay</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #1a1209;
+    --cream: #faf6ee;
+    --gold: #c9962a;
+    --gold-light: #f0d080;
+    --etsy: #f16521;
+    --ebay-blue: #0064d2;
+    --surface: #ffffff;
+    --border: #e8dfc8;
+    --muted: #8a7d65;
+    --success: #4a9c6e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--ink);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+  .logo span { color: #fff; }
+  .tagline {
+    font-size: 0.7rem;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* API KEY */
+  .api-setup {
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
+    border: 1px solid #3a3020;
+    display: flex;
+    gap: 14px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .api-setup-left { flex: 1; min-width: 240px; }
+  .api-setup label {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 600;
+  }
+  .api-setup input {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid #4a3e28;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .api-setup input:focus { border-color: var(--gold); }
+  .api-hint { font-size: 0.72rem; color: #7a6e58; margin-top: 7px; }
+  .api-hint a { color: var(--gold-light); text-decoration: none; }
+  .btn-save-key {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-save-key:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .key-saved { font-size: 0.8rem; color: var(--success); font-weight: 600; }
+
+  /* UPLOAD */
+  .upload-zone {
+    border: 2.5px dashed var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    padding: 44px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--gold); background: #fffbf2; }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 2.8rem; margin-bottom: 12px; display: block; }
+  .upload-title { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+  .upload-sub { font-size: 0.82rem; color: var(--muted); }
+
+  .preview-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .preview-thumb { width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 2px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  /* OPTIONS */
+  .options-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
+  .option-group { flex: 1; min-width: 180px; }
+  .option-group label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; font-weight: 600; }
+  .option-group input, .option-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--ink);
+    outline: none;
+    transition: border 0.2s;
+  }
+  .option-group input:focus, .option-group select:focus { border-color: var(--gold); }
+
+  /* GENERATE */
+  .btn-generate {
+    width: 100%;
+    background: var(--ink);
+    color: var(--gold);
+    border: none;
+    border-radius: 12px;
+    padding: 17px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.2s, transform 0.15s;
+    margin-bottom: 32px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-generate:hover:not(:disabled) { background: #2d2415; transform: translateY(-2px); }
+  .btn-generate:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-get-key {
+  margin-top: 10px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-get-key:hover {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+  /* LOADING */
+  .loading { text-align: center; padding: 50px; display: none; }
+  .loading.active { display: block; }
+  .spinner { width: 42px; height: 42px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 18px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--muted); }
+
+  /* RESULTS */
+  .results { display: none; }
+  .results.active { display: block; }
+
+  .price-bar {
+    background: linear-gradient(135deg, #1a1209, #2d2010);
+    border-radius: 12px;
+    padding: 22px 28px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+  }
+  .price-label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+  .price-value { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 900; color: #fff; margin-top: 4px; }
+  .price-override { flex: 1; min-width: 180px; }
+  .price-override label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-light); display: block; margin-bottom: 7px; font-weight: 600; }
+  .price-override input { background: rgba(255,255,255,0.1); border: 1px solid #5a4e30; border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; width: 100%; outline: none; }
+  .price-override input:focus { border-color: var(--gold); }
+
+  .listings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 20px; }
+  @media (max-width: 640px) { .listings-grid { grid-template-columns: 1fr; } }
+
+  .listing-card { background: var(--surface); border-radius: 14px; border: 1.5px solid var(--border); overflow: hidden; box-shadow: 0 3px 14px rgba(0,0,0,0.07); }
+  .listing-header { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid var(--border); }
+  .listing-header.etsy { background: #fff5f0; }
+  .listing-header.ebay { background: #f0f6ff; }
+  .platform-badge { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; }
+  .platform-badge.etsy { color: var(--etsy); }
+  .platform-badge.ebay { color: var(--ebay-blue); }
+  .ebay-dots { display: flex; gap: 3px; }
+  .ebay-dots span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  .btn-copy { background: var(--ink); color: var(--gold); border: none; border-radius: 6px; padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: background 0.15s; letter-spacing: 0.5px; }
+  .btn-copy:hover { background: #2d2415; }
+  .btn-copy.copied { background: var(--success); color: #fff; }
+
+  .listing-body { padding: 20px; }
+  .listing-section { margin-bottom: 18px; }
+  .listing-section:last-child { margin-bottom: 0; }
+  .section-label { font-size: 0.63rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 7px; }
+  .listing-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; line-height: 1.45; color: var(--ink); }
+  .listing-desc { font-size: 0.84rem; line-height: 1.75; color: #3d3020; white-space: pre-wrap; }
+  .listing-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { background: var(--cream); border: 1px solid var(--border); border-radius: 20px; padding: 4px 11px; font-size: 0.71rem; color: var(--muted); font-weight: 500; }
+
+  .reset-btn { display: block; width: 100%; background: transparent; border: none; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 0.84rem; color: var(--muted); cursor: pointer; text-decoration: underline; text-align: center; }
+
+  .error-box { background: #fff0f0; border: 1.5px solid #ffcccc; border-radius: 10px; padding: 16px 20px; color: #c0392b; font-size: 0.88rem; margin-bottom: 20px; display: none; }
+  .error-box.active { display: block; }
+
+  .item-summary { background: #f5f0e8; border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 14px 18px; margin-bottom: 24px; font-size: 0.85rem; color: #4a3e28; line-height: 1.6; }
+  .item-summary strong { font-weight: 600; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">List<span>Smart</span></div>
+    <div class="tagline">AI Listings for Etsy &amp; eBay</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- API KEY SETUP -->
+  <div class="api-setup">
+    <div class="api-setup-left">
+      <label>Your Gemini API Key</label>
+      <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off">
+      <div class="api-hint">
+  Get your free Gemini API key at
+  <a 
+  href="https://aistudio.google.com/app/apikey" 
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Google AI Studio
+</a>
+  &nbsp;·&nbsp;
+  Stored only in your browser, never sent anywhere else
+</div>
+    </div>
+    <button class="btn-save-key" onclick="saveKey()">Save Key</button>
+    <div class="key-saved" id="keySaved" style="display:none">✓ Key saved</div>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
+    <span class="upload-icon">📸</span>
+    <div class="upload-title">Drop your item photos here</div>
+    <div class="upload-sub">JPG, PNG, WEBP &nbsp;·&nbsp; Up to 5 images &nbsp;·&nbsp; Click or drag to upload</div>
+  </div>
+
+  <div class="preview-grid" id="previewGrid"></div>
+
+  <!-- OPTIONS -->
+  <div class="options-row">
+    <div class="option-group">
+      <label>Item Category</label>
+      <select id="category">
+        <option value="auto">Auto-detect from image</option>
+        <option value="watches & jewelry">Watches &amp; Jewelry</option>
+        <option value="clothing & fashion">Clothing &amp; Fashion</option>
+        <option value="art & collectibles">Art &amp; Collectibles</option>
+        <option value="vintage & antiques">Vintage &amp; Antiques</option>
+        <option value="electronics">Electronics</option>
+        <option value="home & garden">Home &amp; Garden</option>
+        <option value="toys & games">Toys &amp; Games</option>
+        <option value="books & media">Books &amp; Media</option>
+        <option value="sports & outdoors">Sports &amp; Outdoors</option>
+      </select>
+    </div>
+    <div class="option-group">
+      <label>Item Condition</label>
+      <select id="condition">
+        <option value="auto">Auto-detect from image</option>
+        <option value="New with tags">New with tags</option>
+        <option value="Like new">Like new</option>
+        <option value="Very good">Very good</option>
+        <option value="Good">Good</option>
+        <option value="Acceptable / Worn">Acceptable / Worn</option>
+        <option value="For parts / not working">For parts / not working</option>
+      </select>
+    </div>
+    <div class="option-group">
+      <label>Your Price (optional)</label>
+      <input type="text" id="userPrice" placeholder="e.g. $45 or leave blank for AI suggestion">
+    </div>
+  </div>
+
+  <div class="options-row">
+    <div class="option-group" style="flex:3">
+      <label>Extra details you know (optional)</label>
+      <input type="text" id="extraInfo" placeholder="e.g. bought in Paris 1989, original box included, minor scratch on back, size M…">
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <button class="btn-generate" id="generateBtn" onclick="generate()" disabled>
+    <span>✦</span> Generate Listings
+  </button>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Analysing your item and writing listings…</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <div class="item-summary" id="itemSummary"></div>
+
+    <div class="price-bar">
+      <div>
+        <div class="price-label">AI Suggested Price</div>
+        <div class="price-value" id="suggestedPrice">—</div>
+      </div>
+      <div class="price-override">
+        <label>Override with your price</label>
+        <input type="text" id="finalPrice" placeholder="Enter your price">
+      </div>
+    </div>
+
+    <div class="listings-grid">
+
+      <!-- ETSY -->
+      <div class="listing-card">
+        <div class="listing-header etsy">
+          <div class="platform-badge etsy">
+            <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#F16521"/><text x="12" y="17" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Georgia,serif">e</text></svg>
+            Etsy Listing
+          </div>
+          <button class="btn-copy" id="copyEtsy" onclick="copyListing('etsy')">Copy All</button>
+        </div>
+        <div class="listing-body">
+          <div class="listing-section">
+            <div class="section-label">Title</div>
+            <div class="listing-title" id="etsyTitle">—</div>
+          </div>
+          <div class="listing-section">
+            <div class="section-label">Description</div>
+            <div class="listing-desc" id="etsyDesc">—</div>
+          </div>
+          <div class="listing-section">
+            <div class="section-label">Tags (13 max for Etsy)</div>
+            <div class="listing-tags" id="etsyTags"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EBAY -->
+      <div class="listing-card">
+        <div class="listing-header ebay">
+          <div class="platform-badge ebay">
+            <div class="ebay-dots">
+              <span style="background:#e53238"></span>
+              <span style="background:#0064d2"></span>
+              <span style="background:#f5af02"></span>
+              <span style="background:#86b817"></span>
+            </div>
+            &nbsp;eBay Listing
+          </div>
+          <button class="btn-copy" id="copyEbay" onclick="copyListing('ebay')">Copy All</button>
+        </div>
+        <div class="listing-body">
+          <div class="listing-section">
+            <div class="section-label">Title (80 chars max)</div>
+            <div class="listing-title" id="ebayTitle">—</div>
+          </div>
+          <div class="listing-section">
+            <div class="section-label">Description</div>
+            <div class="listing-desc" id="ebayDesc">—</div>
+          </div>
+          <div class="listing-section">
+            <div class="section-label">Item Specifics</div>
+            <div class="listing-tags" id="ebayTags"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="reset-btn" onclick="resetApp()">↩ Start over with a new item</button>
+  </div>
+
+</div>
+
+<script>
+let uploadedImages = [];
+
+window.onload = () => {
+  const saved = localStorage.getItem('listsmart_apikey');
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    document.getElementById('keySaved').style.display = 'inline';
+    checkReady();
+  }
+};
+
+function saveKey() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) return;
+  localStorage.setItem('listsmart_apikey', key);
+  document.getElementById('keySaved').style.display = 'inline';
+  checkReady();
+}
+
+function checkReady() {
+  const hasKey = document.getElementById('apiKey').value.trim().length > 10;
+  const hasImages = uploadedImages.length > 0;
+  document.getElementById('generateBtn').disabled = !(hasKey && hasImages);
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function handleFiles(files) {
+  uploadedImages = [];
+  document.getElementById('previewGrid').innerHTML = '';
+  for (const file of Array.from(files).slice(0, 5)) {
+    const b64 = await toBase64(file);
+    uploadedImages.push({ b64, type: file.type });
+    const img = document.createElement('img');
+    img.className = 'preview-thumb';
+    img.src = `data:${file.type};base64,${b64}`;
+    document.getElementById('previewGrid').appendChild(img);
+  }
+  checkReady();
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('active');
+}
+function hideError() { document.getElementById('errorBox').classList.remove('active'); }
+
+async function generate() {
+  hideError();
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const category = document.getElementById('category').value;
+  const condition = document.getElementById('condition').value;
+  const userPrice = document.getElementById('userPrice').value.trim();
+  const extraInfo = document.getElementById('extraInfo').value.trim();
+
+  if (!apiKey) { showError('Please enter your Gemini API key first.'); return; }
+  if (uploadedImages.length === 0) { showError('Please upload at least one photo.'); return; }
+
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('generateBtn').disabled = true;
+
+  const imageContent = uploadedImages.map(img => ({
+    type: 'image',
+    source: { type: 'base64', media_type: img.type, data: img.b64 }
+  }));
+
+  const prompt = `You are an expert marketplace listing copywriter specialising in Etsy and eBay. Analyse the item(s) in the provided image(s) with great attention to detail.
+
+${category !== 'auto' ? `Category hint from seller: ${category}` : ''}
+${condition !== 'auto' ? `Condition from seller: ${condition}` : 'Auto-detect condition from the image.'}
+${userPrice ? `Seller's own price: ${userPrice}` : 'Suggest a price based on what you identify.'}
+${extraInfo ? `Extra info from seller: ${extraInfo}` : ''}
+
+Identify: brand, model, era/decade, colours, materials, dimensions (estimate if possible), condition, any visible markings, signatures, labels, or notable features that affect value.
+
+Respond ONLY with a valid JSON object — no markdown, no backticks, no preamble. Use this exact structure:
+
+{
+  "item_summary": "1-2 sentence internal summary of what you identified, including brand/maker if known",
+  "suggested_price": "Realistic price range in USD e.g. $45–$65",
+  "etsy": {
+    "title": "Etsy title under 140 chars — warm, story-driven, SEO-rich, evocative",
+    "description": "Full Etsy description 180-260 words. Warm, human tone. Cover: what it is, era/style, colours, materials, condition, why someone will love it, dimensions if visible. Use line breaks between paragraphs. End with a note about careful packaging.",
+    "tags": ["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"]
+  },
+  "ebay": {
+    "title": "eBay title STRICTLY under 80 characters, keyword-rich, condition included",
+    "description": "eBay description 120-180 words. Direct, factual, scannable. Include: exact item name, brand, model, year, colour, material, condition with honest detail, what is included in the sale. Use short paragraphs.",
+    "item_specifics": ["Brand: X","Type: Y","Era: Z","Material: W","Colour: V","Condition: U","Style: T"]
+  }
+}`;
+
+  try {
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              ...uploadedImages.map(img => ({
+                inlineData: {
+                  mimeType: img.type,
+                  data: img.b64
+                }
+              })),
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1800
+        }
+      })
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error(err);
+    throw new Error(err.error?.message || `API error ${res.status}`);
+  }
+
+  const data = await res.json();
+
+  console.log(data);
+
+  const raw =
+    data.candidates?.[0]?.content?.parts?.[0]?.text
+      ?.replace(/```json/g, '')
+      ?.replace(/```/g, '')
+      ?.trim();
+
+  if (!raw) {
+    throw new Error('No response from Gemini.');
+  }
+
+  let p;
+
+  try {
+    p = JSON.parse(raw);
+  } catch (jsonErr) {
+    console.error(raw);
+    throw new Error('Gemini returned invalid JSON.');
+  }
+
+  document.getElementById('itemSummary').innerHTML =
+    `<strong>Item identified:</strong> ${p.item_summary}`;
+
+  document.getElementById('suggestedPrice').textContent =
+    p.suggested_price;
+
+  document.getElementById('finalPrice').value =
+    userPrice || '';
+
+  document.getElementById('etsyTitle').textContent =
+    p.etsy.title;
+
+  document.getElementById('etsyDesc').textContent =
+    p.etsy.description;
+
+  document.getElementById('etsyTags').innerHTML =
+    p.etsy.tags.map(t =>
+      `<span class="tag">${t}</span>`
+    ).join('');
+
+  document.getElementById('ebayTitle').textContent =
+    p.ebay.title;
+
+  document.getElementById('ebayDesc').textContent =
+    p.ebay.description;
+
+  document.getElementById('ebayTags').innerHTML =
+    p.ebay.item_specifics.map(t =>
+      `<span class="tag">${t}</span>`
+    ).join('');
+
+  document.getElementById('loading').classList.remove('active');
+
+  document.getElementById('results').classList.add('active');
+
+  document.getElementById('generateBtn').disabled = false;
+
+  document.getElementById('results').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+
+} catch(e) {
+
+  console.error(e);
+
+  document.getElementById('loading').classList.remove('active');
+
+  document.getElementById('generateBtn').disabled = false;
+
+  showError('Error: ' + e.message);
+
+}
+}
+
+function copyListing(platform) {
+  const title = document.getElementById(platform + 'Title').textContent;
+  const desc = document.getElementById(platform + 'Desc').textContent;
+  const tags = Array.from(document.getElementById(platform + 'Tags').querySelectorAll('.tag')).map(t => t.textContent).join(', ');
+  const price = document.getElementById('finalPrice').value || document.getElementById('suggestedPrice').textContent;
+  const text = `TITLE:\n${title}\n\nDESCRIPTION:\n${desc}\n\nPRICE: ${price}\n\nTAGS / ITEM SPECIFICS:\n${tags}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy' + platform.charAt(0).toUpperCase() + platform.slice(1));
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy All'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function resetApp() {
+  uploadedImages = [];
+  document.getElementById('previewGrid').innerHTML = '';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('userPrice').value = '';
+  document.getElementById('extraInfo').value = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('generateBtn').disabled = true;
+  hideError();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Drag and drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+document.getElementById('apiKey').addEventListener('input', checkReady);
+</script>
+
+</body>
+</html>
