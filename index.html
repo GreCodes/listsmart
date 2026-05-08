@@ -537,19 +537,24 @@ ACCURACY MODE (CRITICAL):
 - Do NOT guess or assume missing details
 - If uncertain, explicitly say "not visible" or "not confirmed"
 - Never fabricate brand, model, material, or features
+- If model or brand is uncertain, set value to "unknown"
+- Never infer brand/model from style alone
 
 WATCH & MATERIAL RULES:
 - Only identify strap type if clearly visible (metal, leather, rubber, fabric, silicone)
 - Do NOT assume Velcro unless hook-and-loop fastening is clearly visible
 - Swatch models must ONLY be named if text is clearly visible on watch or case back
 - Otherwise say: "Swatch watch (exact model not identifiable)"
+- POP Swatch watches NEVER use Velcro straps (no exceptions). If strap type is unclear, describe as "strap type not identifiable" rather than guessing.
+- POP Swatch model codes (if present) are typically alphanumeric (often 3 letters + 4 numbers), but MUST ONLY be used if clearly visible on the watch, case back, or packaging
+- Do NOT infer or reconstruct model codes from style, shape, or partial markings
 
 MEASUREMENTS RULE:
 - Only include dimensions if they are clearly visible or explicitly known
 - NEVER estimate size from appearance
 - If unsure, omit measurements completely
 
-Identify: brand, model, era/decade, colours, materials, dimensions (estimate if possible), condition, any visible markings, signatures, labels, or notable features that affect value.
+Identify: brand, model, era/decade, colours, materials, dimensions (ONLY if explicitly visible or provided; otherwise omit), condition, any visible markings, signatures, labels, or notable features that affect value.
 
 Respond ONLY with a valid JSON object — no markdown, no backticks, no preamble. Use this exact structure:
 
