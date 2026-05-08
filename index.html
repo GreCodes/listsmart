@@ -561,7 +561,16 @@ MEASUREMENTS RULE:
 
 Identify: brand, model, era/decade, colours, materials, dimensions (ONLY if explicitly visible or provided; otherwise omit), condition, any visible markings, signatures, labels, or notable features that affect value.
 
-Respond ONLY with a valid JSON object — no markdown, no backticks, no preamble. Use this exact structure:
+Respond ONLY with valid JSON.
+
+Rules:
+- Output must start with { and end with }
+- No markdown, no code blocks, no backticks
+- No explanations, no text before or after JSON
+- Use double quotes for all keys and strings
+- No trailing commas
+- If you cannot comply, return exactly:
+{"error":"invalid_json"}
 
 {
   "item_summary": "1-2 sentence internal summary of what you identified, including brand/maker if known",
