@@ -532,6 +532,23 @@ ${condition !== 'auto' ? `Condition from seller: ${condition}` : 'Auto-detect co
 ${userPrice ? `Seller's own price: ${userPrice}` : 'Suggest a price based on what you identify.'}
 ${extraInfo ? `Extra info from seller: ${extraInfo}` : ''}
 
+ACCURACY MODE (CRITICAL):
+- Only describe what is clearly visible in the image
+- Do NOT guess or assume missing details
+- If uncertain, explicitly say "not visible" or "not confirmed"
+- Never fabricate brand, model, material, or features
+
+WATCH & MATERIAL RULES:
+- Only identify strap type if clearly visible (metal, leather, rubber, fabric, silicone)
+- Do NOT assume Velcro unless hook-and-loop fastening is clearly visible
+- Swatch models must ONLY be named if text is clearly visible on watch or case back
+- Otherwise say: "Swatch watch (exact model not identifiable)"
+
+MEASUREMENTS RULE:
+- Only include dimensions if they are clearly visible or explicitly known
+- NEVER estimate size from appearance
+- If unsure, omit measurements completely
+
 Identify: brand, model, era/decade, colours, materials, dimensions (estimate if possible), condition, any visible markings, signatures, labels, or notable features that affect value.
 
 Respond ONLY with a valid JSON object — no markdown, no backticks, no preamble. Use this exact structure:
