@@ -604,14 +604,14 @@ Respond ONLY with a valid JSON object — no markdown, no backticks, no preamble
     throw new Error('No response from Gemini.');
   }
 
-  let p;
+let p;
 
-  try {
-    p = JSON.parse(raw);
-  } catch (jsonErr) {
-    console.error(raw);
-    throw new Error('Gemini returned invalid JSON.');
-  }
+try {
+  p = extractJSON(raw);
+} catch (err) {
+  console.error("RAW GEMINI OUTPUT:", raw);
+  throw new Error(err.message);
+}
 
   document.getElementById('itemSummary').innerHTML =
     `<strong>Item identified:</strong> ${p.item_summary}`;
