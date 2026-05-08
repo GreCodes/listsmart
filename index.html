@@ -483,6 +483,23 @@ function showError(msg) {
 }
 function hideError() { document.getElementById('errorBox').classList.remove('active'); }
 
+// --- THE NEW ROBUST PARSER ---
+function extractJSON(text) {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    // Clean markdown and find the actual { } brackets
+    const cleaned = text.replace(/```json/g, "").replace(/
+```/g, "").trim();
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start !== -1 && end !== -1) {
+      return JSON.parse(cleaned.substring(start, end + 1));
+    }
+    throw new Error("Could not find valid JSON in AI response.");
+  }
+}
+
 async function generate() {
   hideError();
   const apiKey = document.getElementById('apiKey').value.trim();
@@ -491,172 +508,69 @@ async function generate() {
   const userPrice = document.getElementById('userPrice').value.trim();
   const extraInfo = document.getElementById('extraInfo').value.trim();
 
-  if (!apiKey) { showError('Please enter your Gemini API key first.'); return; }
-  if (uploadedImages.length === 0) { showError('Please upload at least one photo.'); return; }
-
   document.getElementById('loading').classList.add('active');
   document.getElementById('results').classList.remove('active');
   document.getElementById('generateBtn').disabled = true;
 
-  const imageContent = uploadedImages.map(img => ({
-    type: 'image',
-    source: { type: 'base64', media_type: img.type, data: img.b64 }
-  }));
-
-  const prompt = `You are an expert marketplace listing copywriter specialising in Etsy and eBay. Analyse the item(s) in the provided image(s) with great attention to detail.
-
-${category !== 'auto' ? `Category hint from seller: ${category}` : ''}
-${condition !== 'auto' ? `Condition from seller: ${condition}` : 'Auto-detect condition from the image.'}
-${userPrice ? `Seller's own price: ${userPrice}` : 'Suggest a price based on what you identify.'}
-${extraInfo ? `Extra info from seller: ${extraInfo}` : ''}
-
-Identify: brand, model, era/decade, colours, materials, dimensions (estimate if possible), condition, any visible markings, signatures, labels, or notable features that affect value.
-
-Respond ONLY with a valid JSON object — no markdown, no backticks, no preamble. Use this exact structure:
-
-{
-  "item_summary": "1-2 sentence internal summary of what you identified, including brand/maker if known",
-  "suggested_price": "Realistic price range in USD e.g. $45–$65",
-  "etsy": {
-    "title": "Etsy title under 140 chars — warm, story-driven, SEO-rich, evocative",
-    "description": "Full Etsy description 180-260 words. Warm, human tone. Cover: what it is, era/style, colours, materials, condition, why someone will love it, dimensions if visible. Use line breaks between paragraphs. End with a note about careful packaging.",
-    "tags": ["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"]
-  },
-  "ebay": {
-    "title": "eBay title STRICTLY under 80 characters, keyword-rich, condition included",
-    "description": "eBay description 120-180 words. Direct, factual, scannable. Include: exact item name, brand, model, year, colour, material, condition with honest detail, what is included in the sale. Use short paragraphs.",
-    "item_specifics": ["Brand: X","Type: Y","Era: Z","Material: W","Colour: V","Condition: U","Style: T"]
-  }
-}`;
+  const prompt = `Identify the item in the images and respond ONLY with a JSON object. 
+  Structure: {"item_summary":"", "suggested_price":"", "etsy":{"title":"", "description":"", "tags":[]}, "ebay":{"title":"", "description":"", "item_specifics":[]}}
+  Context: Category ${category}, Condition ${condition}, Notes: ${extraInfo}`;
 
   try {
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
+    // FIXED MODEL NAME TO 1.5-FLASH
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              ...uploadedImages.map(img => ({
-                inlineData: {
-                  mimeType: img.type,
-                  data: img.b64
-                }
-              })),
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1800
+        contents: [{
+          parts: [
+            ...uploadedImages.map(img => ({ inlineData: { mimeType: img.type, data: img.b64 } })),
+            { text: prompt }
+          ]
+        }],
+        generationConfig: { 
+            temperature: 0.2, 
+            responseMimeType: "application/json" // Tells Gemini to output JSON
         }
       })
-    }
-  );
+    });
 
-  if (!res.ok) {
-    const err = await res.json();
-    console.error(err);
-    throw new Error(err.error?.message || `API error ${res.status}`);
+    if (!res.ok) throw new Error("API call failed. Check your key.");
+
+    const data = await res.json();
+    const rawText = data.candidates[0].content.parts[0].text;
+    
+    // Use the new extractor here
+    const p = extractJSON(rawText);
+
+    document.getElementById('itemSummary').innerHTML = `<strong>Identified:</strong> ${p.item_summary}`;
+    document.getElementById('suggestedPrice').textContent = p.suggested_price;
+    document.getElementById('etsyTitle').textContent = p.etsy.title;
+    document.getElementById('etsyDesc').textContent = p.etsy.description;
+    document.getElementById('etsyTags').innerHTML = p.etsy.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    document.getElementById('ebayTitle').textContent = p.ebay.title;
+    document.getElementById('ebayDesc').textContent = p.ebay.description;
+    document.getElementById('ebayTags').innerHTML = p.ebay.item_specifics.map(t => `<span class="tag">${t}</span>`).join('');
+
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('results').classList.add('active');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    document.getElementById('loading').classList.remove('active');
+    showError(e.message);
+  } finally {
+    document.getElementById('generateBtn').disabled = false;
   }
-
-  const data = await res.json();
-
-  console.log(data);
-
-  const raw =
-    data.candidates?.[0]?.content?.parts?.[0]?.text
-      ?.replace(/```json/g, '')
-      ?.replace(/```/g, '')
-      ?.trim();
-
-  if (!raw) {
-    throw new Error('No response from Gemini.');
-  }
-
-  let p;
-
-  try {
-    p = JSON.parse(raw);
-  } catch (jsonErr) {
-    console.error(raw);
-    throw new Error('Gemini returned invalid JSON.');
-  }
-
-  document.getElementById('itemSummary').innerHTML =
-    `<strong>Item identified:</strong> ${p.item_summary}`;
-
-  document.getElementById('suggestedPrice').textContent =
-    p.suggested_price;
-
-  document.getElementById('finalPrice').value =
-    userPrice || '';
-
-  document.getElementById('etsyTitle').textContent =
-    p.etsy.title;
-
-  document.getElementById('etsyDesc').textContent =
-    p.etsy.description;
-
-  document.getElementById('etsyTags').innerHTML =
-    p.etsy.tags.map(t =>
-      `<span class="tag">${t}</span>`
-    ).join('');
-
-  document.getElementById('ebayTitle').textContent =
-    p.ebay.title;
-
-  document.getElementById('ebayDesc').textContent =
-    p.ebay.description;
-
-  document.getElementById('ebayTags').innerHTML =
-    p.ebay.item_specifics.map(t =>
-      `<span class="tag">${t}</span>`
-    ).join('');
-
-  document.getElementById('loading').classList.remove('active');
-
-  document.getElementById('results').classList.add('active');
-
-  document.getElementById('generateBtn').disabled = false;
-
-  document.getElementById('results').scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
-  });
-
-} catch(e) {
-
-  console.error(e);
-
-  document.getElementById('loading').classList.remove('active');
-
-  document.getElementById('generateBtn').disabled = false;
-
-  showError('Error: ' + e.message);
-
-}
 }
 
 function copyListing(platform) {
   const title = document.getElementById(platform + 'Title').textContent;
   const desc = document.getElementById(platform + 'Desc').textContent;
-  const tags = Array.from(document.getElementById(platform + 'Tags').querySelectorAll('.tag')).map(t => t.textContent).join(', ');
-  const price = document.getElementById('finalPrice').value || document.getElementById('suggestedPrice').textContent;
-  const text = `TITLE:\n${title}\n\nDESCRIPTION:\n${desc}\n\nPRICE: ${price}\n\nTAGS / ITEM SPECIFICS:\n${tags}`;
+  const text = `TITLE: ${title}\n\nDESCRIPTION: ${desc}`;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copy' + platform.charAt(0).toUpperCase() + platform.slice(1));
-    btn.textContent = '✓ Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy All'; btn.classList.remove('copied'); }, 2000);
+    btn.textContent = '✓ Copied';
+    setTimeout(() => btn.textContent = 'Copy All', 2000);
   });
 }
 
@@ -664,21 +578,16 @@ function resetApp() {
   uploadedImages = [];
   document.getElementById('previewGrid').innerHTML = '';
   document.getElementById('results').classList.remove('active');
-  document.getElementById('userPrice').value = '';
-  document.getElementById('extraInfo').value = '';
   document.getElementById('fileInput').value = '';
-  document.getElementById('generateBtn').disabled = true;
-  hideError();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  checkReady();
 }
 
-// Drag and drop
 const zone = document.getElementById('uploadZone');
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
 zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
 document.getElementById('apiKey').addEventListener('input', checkReady);
 </script>
-
+  
 </body>
 </html>
