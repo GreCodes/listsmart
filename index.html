@@ -483,6 +483,28 @@ function showError(msg) {
 }
 function hideError() { document.getElementById('errorBox').classList.remove('active'); }
 
+  function extractJSON(text) {
+  try {
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    try {
+      return JSON.parse(text);
+    } catch (e) {}
+
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+
+    if (start === -1 || end === -1) {
+      throw new Error("No JSON found in response");
+    }
+
+    return JSON.parse(text.slice(start, end + 1));
+
+  } catch (err) {
+    console.error("RAW OUTPUT:", text);
+    throw new Error("Failed to parse Gemini JSON");
+  }
+}
 async function generate() {
   hideError();
   const apiKey = document.getElementById('apiKey').value.trim();
