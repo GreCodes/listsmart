@@ -172,24 +172,6 @@
   .btn-generate:hover:not(:disabled) { background: #2d2415; transform: translateY(-2px); }
   .btn-generate:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  .btn-get-key {
-  margin-top: 10px;
-  background: transparent;
-  border: 1px solid var(--gold);
-  color: var(--gold-light);
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-get-key:hover {
-  background: var(--gold);
-  color: var(--ink);
-}
-
   /* LOADING */
   .loading { text-align: center; padding: 50px; display: none; }
   .loading.active { display: block; }
@@ -267,17 +249,10 @@
       <label>Your Gemini API Key</label>
       <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off">
       <div class="api-hint">
-  Get your free Gemini API key at
-  <a 
-  href="https://aistudio.google.com/app/apikey" 
-  target="_blank"
-  rel="noopener noreferrer"
->
-  Google AI Studio
-</a>
-  &nbsp;·&nbsp;
-  Stored only in your browser, never sent anywhere else
-</div>
+        Get your free Gemini API key at
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+        &nbsp;·&nbsp; Stored locally in your browser.
+      </div>
     </div>
     <button class="btn-save-key" onclick="saveKey()">Save Key</button>
     <div class="key-saved" id="keySaved" style="display:none">✓ Key saved</div>
@@ -288,7 +263,7 @@
     <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
     <span class="upload-icon">📸</span>
     <div class="upload-title">Drop your item photos here</div>
-    <div class="upload-sub">JPG, PNG, WEBP &nbsp;·&nbsp; Up to 5 images &nbsp;·&nbsp; Click or drag to upload</div>
+    <div class="upload-sub">JPG, PNG, WEBP &nbsp;·&nbsp; Up to 5 images</div>
   </div>
 
   <div class="preview-grid" id="previewGrid"></div>
@@ -305,9 +280,6 @@
         <option value="vintage & antiques">Vintage &amp; Antiques</option>
         <option value="electronics">Electronics</option>
         <option value="home & garden">Home &amp; Garden</option>
-        <option value="toys & games">Toys &amp; Games</option>
-        <option value="books & media">Books &amp; Media</option>
-        <option value="sports & outdoors">Sports &amp; Outdoors</option>
       </select>
     </div>
     <div class="option-group">
@@ -318,20 +290,18 @@
         <option value="Like new">Like new</option>
         <option value="Very good">Very good</option>
         <option value="Good">Good</option>
-        <option value="Acceptable / Worn">Acceptable / Worn</option>
-        <option value="For parts / not working">For parts / not working</option>
       </select>
     </div>
     <div class="option-group">
       <label>Your Price (optional)</label>
-      <input type="text" id="userPrice" placeholder="e.g. $45 or leave blank for AI suggestion">
+      <input type="text" id="userPrice" placeholder="e.g. $45">
     </div>
   </div>
 
   <div class="options-row">
     <div class="option-group" style="flex:3">
-      <label>Extra details you know (optional)</label>
-      <input type="text" id="extraInfo" placeholder="e.g. bought in Paris 1989, original box included, minor scratch on back, size M…">
+      <label>Extra details (optional)</label>
+      <input type="text" id="extraInfo" placeholder="e.g. original box included...">
     </div>
   </div>
 
@@ -344,14 +314,12 @@
   <!-- LOADING -->
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div class="loading-text">Analysing your item and writing listings…</div>
+    <div class="loading-text">Analyzing your item and writing listings…</div>
   </div>
 
   <!-- RESULTS -->
   <div class="results" id="results">
-
     <div class="item-summary" id="itemSummary"></div>
-
     <div class="price-bar">
       <div>
         <div class="price-label">AI Suggested Price</div>
@@ -364,14 +332,10 @@
     </div>
 
     <div class="listings-grid">
-
       <!-- ETSY -->
       <div class="listing-card">
         <div class="listing-header etsy">
-          <div class="platform-badge etsy">
-            <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#F16521"/><text x="12" y="17" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Georgia,serif">e</text></svg>
-            Etsy Listing
-          </div>
+          <div class="platform-badge etsy">Etsy Listing</div>
           <button class="btn-copy" id="copyEtsy" onclick="copyListing('etsy')">Copy All</button>
         </div>
         <div class="listing-body">
@@ -384,7 +348,7 @@
             <div class="listing-desc" id="etsyDesc">—</div>
           </div>
           <div class="listing-section">
-            <div class="section-label">Tags (13 max for Etsy)</div>
+            <div class="section-label">Tags</div>
             <div class="listing-tags" id="etsyTags"></div>
           </div>
         </div>
@@ -393,20 +357,12 @@
       <!-- EBAY -->
       <div class="listing-card">
         <div class="listing-header ebay">
-          <div class="platform-badge ebay">
-            <div class="ebay-dots">
-              <span style="background:#e53238"></span>
-              <span style="background:#0064d2"></span>
-              <span style="background:#f5af02"></span>
-              <span style="background:#86b817"></span>
-            </div>
-            &nbsp;eBay Listing
-          </div>
+          <div class="platform-badge ebay">eBay Listing</div>
           <button class="btn-copy" id="copyEbay" onclick="copyListing('ebay')">Copy All</button>
         </div>
         <div class="listing-body">
           <div class="listing-section">
-            <div class="section-label">Title (80 chars max)</div>
+            <div class="section-label">Title</div>
             <div class="listing-title" id="ebayTitle">—</div>
           </div>
           <div class="listing-section">
@@ -419,12 +375,10 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <button class="reset-btn" onclick="resetApp()">↩ Start over with a new item</button>
+    <button class="reset-btn" onclick="resetApp()">↩ Start over</button>
   </div>
-
 </div>
 
 <script>
@@ -485,26 +439,15 @@ function hideError() { document.getElementById('errorBox').classList.remove('act
 
 function extractJSON(text) {
   try {
-    // 1. Remove Markdown code fences if they exist
     const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    
-    // 2. Try to parse the cleaned text
     return JSON.parse(cleaned);
   } catch (e) {
-    // 3. Fallback: Try to find anything between the first { and the last }
     const match = text.match(/\{[\s\S]*\}/);
-    if (match) {
-      try {
-        return JSON.parse(match[0]);
-      } catch (innerError) {
-        console.error("Partial JSON found but still unparseable:", match[0]);
-      }
-    }
-    throw new Error("Gemini returned invalid data format. Please try again.");
+    if (match) return JSON.parse(match[0]);
+    throw new Error("Failed to parse AI response.");
   }
 }
-  }
-}
+
 async function generate() {
   hideError();
   const apiKey = document.getElementById('apiKey').value.trim();
@@ -513,204 +456,62 @@ async function generate() {
   const userPrice = document.getElementById('userPrice').value.trim();
   const extraInfo = document.getElementById('extraInfo').value.trim();
 
-  if (!apiKey) { showError('Please enter your Gemini API key first.'); return; }
-  if (uploadedImages.length === 0) { showError('Please upload at least one photo.'); return; }
-
   document.getElementById('loading').classList.add('active');
   document.getElementById('results').classList.remove('active');
   document.getElementById('generateBtn').disabled = true;
 
-  const imageContent = uploadedImages.map(img => ({
-    type: 'image',
-    source: { type: 'base64', media_type: img.type, data: img.b64 }
-  }));
-
-  const prompt = `You are an expert marketplace listing copywriter specialising in Etsy and eBay. Analyse the item(s) in the provided image(s) with great attention to detail.
-
-${category !== 'auto' ? `Category hint from seller: ${category}` : ''}
-${condition !== 'auto' ? `Condition from seller: ${condition}` : 'Auto-detect condition from the image.'}
-${userPrice ? `Seller's own price: ${userPrice}` : 'Suggest a price based on what you identify.'}
-${extraInfo ? `Extra info from seller: ${extraInfo}` : ''}
-
-ACCURACY MODE (CRITICAL):
-- Only describe what is clearly visible in the image
-- Do NOT guess or assume missing details
-- If uncertain, explicitly say "not visible" or "not confirmed"
-- Never fabricate brand, model, material, or features
-- If model or brand is uncertain, set value to "unknown"
-- Never infer brand/model from style alone
-
-WATCH & MATERIAL RULES:
-- Only identify strap type if clearly visible (metal, leather, rubber, fabric, silicone)
-- Do NOT assume Velcro unless hook-and-loop fastening is clearly visible
-- Swatch models must ONLY be named if text is clearly visible on watch or case back
-- Otherwise say: "Swatch watch (exact model not identifiable)"
-- POP Swatch watches NEVER use Velcro straps (no exceptions). If strap type is unclear, describe as "strap type not identifiable" rather than guessing.
-- POP Swatch model codes (if present) are typically alphanumeric (often 3 letters + 4 numbers), but MUST ONLY be used if clearly visible on the watch, case back, or packaging
-- Do NOT infer or reconstruct model codes from style, shape, or partial markings
-
-MEASUREMENTS RULE:
-- Only include dimensions if they are clearly visible or explicitly known
-- NEVER estimate size from appearance
-- If unsure, omit measurements completely
-
-Identify: brand, model, era/decade, colours, materials, dimensions (ONLY if explicitly visible or provided; otherwise omit), condition, any visible markings, signatures, labels, or notable features that affect value.
-
-Respond ONLY with valid JSON.
-
-Rules:
-- Output must start with { and end with }
-- No markdown, no code blocks, no backticks
-- No explanations, no text before or after JSON
-- Use double quotes for all keys and strings
-- No trailing commas
-- If you cannot comply, return exactly:
-{"error":"invalid_json"}
-
-{
-  "item_summary": "1-2 sentence internal summary of what you identified, including brand/maker if known",
-  "suggested_price": "Realistic price range in USD e.g. $45–$65",
-  "etsy": {
-    "title": "Etsy title under 140 chars — warm, story-driven, SEO-rich, evocative",
-    "description": "Full Etsy description 180-260 words. Warm, human tone. Cover: what it is, era/style, colours, materials, condition, why someone will love it, dimensions if visible. Use line breaks between paragraphs. End with a note about careful packaging.",
-    "tags": ["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"]
-  },
-  "ebay": {
-    "title": "eBay title STRICTLY under 80 characters, keyword-rich, condition included",
-    "description": "eBay description 120-180 words. Direct, factual, scannable. Include: exact item name, brand, model, year, colour, material, condition with honest detail, what is included in the sale. Use short paragraphs.",
-    "item_specifics": ["Brand: X","Type: Y","Era: Z","Material: W","Colour: V","Condition: U","Style: T"]
-  }
-}`;
+  const prompt = `Act as an expert marketplace copywriter. Identify the item in the images and provide a response in JSON format.
+  Required JSON Keys: "item_summary", "suggested_price", "etsy": {"title", "description", "tags"}, "ebay": {"title", "description", "item_specifics"}.
+  Category: ${category}, Condition: ${condition}, Extra Info: ${extraInfo}.`;
 
   try {
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              ...uploadedImages.map(img => ({
-                inlineData: {
-                  mimeType: img.type,
-                  data: img.b64
-                }
-              })),
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 1800,
-          responseMimeType: "application/json"
-        }
+        contents: [{
+          parts: [
+            ...uploadedImages.map(img => ({ inlineData: { mimeType: img.type, data: img.b64 } })),
+            { text: prompt }
+          ]
+        }],
+        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
       })
-    }
-  );
+    });
 
-  if (!res.ok) {
-    const err = await res.json();
-    console.error(err);
-    throw new Error(err.error?.message || `API error ${res.status}`);
+    if (!res.ok) throw new Error("API call failed.");
+    const data = await res.json();
+    const rawText = data.candidates[0].content.parts[0].text;
+    const p = extractJSON(rawText);
+
+    document.getElementById('itemSummary').innerHTML = `<strong>Identified:</strong> ${p.item_summary}`;
+    document.getElementById('suggestedPrice').textContent = p.suggested_price;
+    document.getElementById('etsyTitle').textContent = p.etsy.title;
+    document.getElementById('etsyDesc').textContent = p.etsy.description;
+    document.getElementById('etsyTags').innerHTML = p.etsy.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    document.getElementById('ebayTitle').textContent = p.ebay.title;
+    document.getElementById('ebayDesc').textContent = p.ebay.description;
+    document.getElementById('ebayTags').innerHTML = p.ebay.item_specifics.map(t => `<span class="tag">${t}</span>`).join('');
+
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('results').classList.add('active');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    document.getElementById('loading').classList.remove('active');
+    showError(e.message);
+  } finally {
+    document.getElementById('generateBtn').disabled = false;
   }
-
-  const data = await res.json();
-
-  console.log(data);
-
-  const raw =
-    data.candidates?.[0]?.content?.parts?.[0]?.text
-      ?.replace(/```json/g, '')
-      ?.replace(/```/g, '')
-      ?.trim();
-
-  if (!raw) {
-    throw new Error('No response from Gemini.');
-  }
-
-let p;
-
-try {
-  p = extractJSON(raw);
-} catch (err) {
-  console.error("RAW GEMINI OUTPUT:", raw);
-  throw new Error(err.message);
-}
-
-  document.getElementById('itemSummary').innerHTML =
-    `<strong>Item identified:</strong> ${p.item_summary}`;
-
-  document.getElementById('suggestedPrice').textContent =
-    p.suggested_price;
-
-  document.getElementById('finalPrice').value =
-    userPrice || '';
-
-  document.getElementById('etsyTitle').textContent =
-    p.etsy.title;
-
-  document.getElementById('etsyDesc').textContent =
-    p.etsy.description;
-
-  document.getElementById('etsyTags').innerHTML =
-    p.etsy.tags.map(t =>
-      `<span class="tag">${t}</span>`
-    ).join('');
-
-  document.getElementById('ebayTitle').textContent =
-    p.ebay.title;
-
-  document.getElementById('ebayDesc').textContent =
-    p.ebay.description;
-
-  document.getElementById('ebayTags').innerHTML =
-    p.ebay.item_specifics.map(t =>
-      `<span class="tag">${t}</span>`
-    ).join('');
-
-  document.getElementById('loading').classList.remove('active');
-
-  document.getElementById('results').classList.add('active');
-
-  document.getElementById('generateBtn').disabled = false;
-
-  document.getElementById('results').scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
-  });
-
-} catch(e) {
-
-  console.error(e);
-
-  document.getElementById('loading').classList.remove('active');
-
-  document.getElementById('generateBtn').disabled = false;
-
-  showError('Error: ' + e.message);
-
-}
 }
 
 function copyListing(platform) {
   const title = document.getElementById(platform + 'Title').textContent;
   const desc = document.getElementById(platform + 'Desc').textContent;
-  const tags = Array.from(document.getElementById(platform + 'Tags').querySelectorAll('.tag')).map(t => t.textContent).join(', ');
-  const price = document.getElementById('finalPrice').value || document.getElementById('suggestedPrice').textContent;
-  const text = `TITLE:\n${title}\n\nDESCRIPTION:\n${desc}\n\nPRICE: ${price}\n\nTAGS / ITEM SPECIFICS:\n${tags}`;
+  const text = `TITLE: ${title}\n\nDESCRIPTION: ${desc}`;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copy' + platform.charAt(0).toUpperCase() + platform.slice(1));
-    btn.textContent = '✓ Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy All'; btn.classList.remove('copied'); }, 2000);
+    btn.textContent = '✓ Copied';
+    setTimeout(() => btn.textContent = 'Copy All', 2000);
   });
 }
 
@@ -718,21 +519,9 @@ function resetApp() {
   uploadedImages = [];
   document.getElementById('previewGrid').innerHTML = '';
   document.getElementById('results').classList.remove('active');
-  document.getElementById('userPrice').value = '';
-  document.getElementById('extraInfo').value = '';
   document.getElementById('fileInput').value = '';
-  document.getElementById('generateBtn').disabled = true;
-  hideError();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  checkReady();
 }
-
-// Drag and drop
-const zone = document.getElementById('uploadZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
-document.getElementById('apiKey').addEventListener('input', checkReady);
 </script>
-
 </body>
 </html>
